@@ -57,8 +57,6 @@ void JtagAnalyzer::WorkerThread()
 
 void JtagAnalyzer::Setup()
 {
-	bool allow_last_trailing_clock_edge_to_fall_outside_enable = false;
-
 	mTCK = GetAnalyzerChannelData(mSettings->mTCKChannel);
 	mTMS = GetAnalyzerChannelData(mSettings->mTMSChannel);
 	mTDI = GetAnalyzerChannelData(mSettings->mTDIChannel);
@@ -69,7 +67,6 @@ void JtagAnalyzer::Setup()
     } else {
 		mTRST = NULL;
     }
-
 }
 
 void JtagAnalyzer::ProcessStep()
@@ -180,6 +177,8 @@ void JtagAnalyzer::ProcessStep()
     }
 }
 
+// Register contents are shifted LSB first, so this
+// helper flips the words for us.
 U64 JtagAnalyzer::FlipWord(U64 word, U32 bits)
 {
     U64 result = 0;

@@ -64,7 +64,7 @@ void JtagAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel& channel, 
 void JtagAnalyzerResults::GenerateExportFile(const char* file, DisplayBase display_base, U32 /*export_type_user_id*/)
 {
 	std::stringstream ss;
-	void* f = AnalyzerHelpers::StartFile( file );
+	void* f = AnalyzerHelpers::StartFile(file);
 
 	U64 trigger_sample = mAnalyzer->GetTriggerSample();
 	U32 sample_rate = mAnalyzer->GetSampleRate();
