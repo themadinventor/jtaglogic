@@ -160,15 +160,9 @@ void JtagAnalyzer::ProcessStep()
     if (next_state != mState) {
         // transition. yay. flush the current transaction.
 
-        Frame result_frame;
-        result_frame.mStartingSampleInclusive = mFirstSample;
-        result_frame.mEndingSampleInclusive = mTCK->GetSampleNumber();
-        result_frame.mData1 = FlipWord(mDataIn, mBits);
-        result_frame.mData2 = FlipWord(mDataOut, mBits);
-        result_frame.mFlags = mState;
-
-        U64 frame_id = mResults->AddFrame(result_frame);
-        mResults->CommitResults();
+        mDataIn = FlipWord(mDataIn, mBits);
+        mDataOut = FlipWord(mDataOut, mBits);
+        ProcessTransaction();
 
         mFirstSample = mTCK->GetSampleNumber();
         mState = next_state;
@@ -190,6 +184,46 @@ U64 JtagAnalyzer::FlipWord(U64 word, U32 bits)
     }
 
     return result;
+}
+
+void JtagAnalyzer::ProcessTransaction()
+{
+    if (mState == JtagShiftIR) {
+        mLastInstruction = mDataIn;
+        mInstructionStart = mTCK->GetSampleNumber();
+
+        if (mLastInstruction == AvrForceBreak || mLastInstruction == AvrRun) {
+            Frame result_frame;
+            result_frame.mStartingSampleInclusive = mFirstSample;
+            result_frame.mEndingSampleInclusive = mTCK->GetSampleNumber();
+            result_frame.mData1 = 0;
+            result_frame.mData2 = 0;
+            result_frame.mFlags = mLastInstruction;
+
+            mResults->AddFrame(result_frame);
+            mResults->CommitResults();
+        }
+    } else if (mState == JtagShiftDR) {
+        Frame result_frame;
+        result_frame.mStartingSampleInclusive = mInstructionStart;
+        result_frame.mEndingSampleInclusive = mTCK->GetSampleNumber();
+        result_frame.mData1 = mDataIn;
+        result_frame.mData2 = mDataOut;
+        result_frame.mFlags = mLastInstruction;
+
+        if (mLastInstruction == AvrOCD && !(mDataIn & 0x100000)) {
+            result_frame.mData1 = mLastOCDOp << 16;
+        }
+
+        mInstructionStart = mTCK->GetSampleNumber();
+
+        if (mLastInstruction == AvrOCD && mBits == 5) {
+            mLastOCDOp = mDataIn;
+            return;
+        }
+        mResults->AddFrame(result_frame);
+        mResults->CommitResults();
+    }
 }
 
 bool JtagAnalyzer::NeedsRerun()

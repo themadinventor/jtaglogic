@@ -4,6 +4,7 @@
 #include "JtagAnalyzerSettings.h"
 #include <iostream>
 #include <sstream>
+#include <cstdio>
 
 #pragma warning(disable: 4996) //warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead.
 
@@ -28,6 +29,20 @@ const char *JtagStateStr[] = {
     "UpdateIR"
 };
 
+const char *AvrOCDRegs[] = {
+    "PSB0",
+    "PSB1",
+    "PDMSB",
+    "PDSB",
+    "$4", "$5", "$6", "$7",
+    "BCR",
+    "BSR",
+    "$A", "$B",
+    "OCDR",
+    "CSR",
+    "$E", "$F"
+};
+
 JtagAnalyzerResults::JtagAnalyzerResults(JtagAnalyzer* analyzer, JtagAnalyzerSettings* settings)
 :	AnalyzerResults(),
 	mSettings(settings),
@@ -41,11 +56,85 @@ JtagAnalyzerResults::~JtagAnalyzerResults()
 
 void JtagAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel& channel, DisplayBase display_base)
 {
-    char number_str[128];
+    char buf[128];
 
 	ClearResultStrings();
 	Frame frame = GetFrame(frame_index);
 
+    AvrInstruction instr = static_cast<AvrInstruction>(frame.mFlags & 0xf);
+
+    if (channel == mSettings->mTDIChannel) {
+        switch (instr) {
+        case AvrProgEnable:
+            sprintf(buf, "ProgEnable %08x", frame.mData1);
+			AddResultString(buf);
+            break;
+
+        case AvrProgCmd:
+            sprintf(buf, "ProgCmd %08x", frame.mData1);
+			AddResultString(buf);
+            break;
+
+        case AvrPageLoad:
+            sprintf(buf, "PageLoad %08x", frame.mData1);
+			AddResultString(buf);
+            break;
+
+        case AvrForceBreak:
+            AddResultString("ForceBreak");
+            break;
+
+        case AvrRun:
+            AddResultString("Run");
+            break;
+
+        case AvrExecute:
+            sprintf(buf, "Execute %04x", frame.mData1);
+            AddResultString(buf);
+            break;
+
+        case AvrReset:
+            if (frame.mData1) {
+                AddResultString("EnterReset");
+            } else {
+                AddResultString("LeaveReset");
+            }
+            break;
+
+        case AvrOCD:
+            if (frame.mData1 & 0x100000) {
+                sprintf(buf, "OCD Write %s = %04x", AvrOCDRegs[(frame.mData1 >> 16) & 0xf], frame.mData1 & 0xffff);
+                AddResultString(buf);
+            }
+            break;
+        }
+    } else if (channel == mSettings->mTDOChannel) {
+        switch (instr) {
+        case AvrIdCode:
+            sprintf(buf, "IdCode %08x", frame.mData2);
+			AddResultString(buf);
+            break;
+
+        case AvrPageRead:
+            sprintf(buf, "PageRead %08x", frame.mData2);
+			AddResultString(buf);
+            break;
+
+        case AvrExecute:
+            sprintf(buf, "PC = %04x", frame.mData2);
+            AddResultString(buf);
+            break;
+
+        case AvrOCD:
+            if (!(frame.mData1 & 0x100000)) {
+                sprintf(buf, "OCD Read %s = %04x", AvrOCDRegs[(frame.mData1 >> 16) & 0xf], frame.mData2 & 0xffff);
+                AddResultString(buf);
+            }
+            break;
+        }
+    }
+
+#if 0
     if ((frame.mFlags & 0xf) == JtagShiftDR || (frame.mFlags & 0xf) == JtagShiftIR) {
 		if (channel == mSettings->mTDIChannel) {
             AnalyzerHelpers::GetNumberString(frame.mData1, display_base, 0, number_str, 128);
@@ -59,6 +148,7 @@ void JtagAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel& channel, 
     if (channel == mSettings->mTMSChannel) {
 		AddResultString(JtagStateStr[frame.mFlags & 0x0f]);
 	}
+#endif
 }
 
 void JtagAnalyzerResults::GenerateExportFile(const char* file, DisplayBase display_base, U32 /*export_type_user_id*/)

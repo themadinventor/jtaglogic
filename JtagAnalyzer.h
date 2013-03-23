@@ -26,6 +26,24 @@ enum JtagState {
     JtagUpdateIR
 };
 
+enum AvrInstruction {
+    AvrExtest = 0x01,
+    AvrIdCode = 0x02,
+
+    AvrProgEnable = 0x04,
+    AvrProgCmd = 0x05,
+    AvrPageLoad = 0x06,
+    AvrPageRead = 0x07,
+
+    AvrForceBreak = 0x08,
+    AvrRun = 0x09,
+    AvrExecute = 0x0A,
+    AvrOCD = 0x0B,
+    AvrReset = 0x0C,
+
+    AvrBypass = 0x0f
+};
+
 class JtagAnalyzerSettings;
 class JtagAnalyzer : public Analyzer2
 {
@@ -45,10 +63,11 @@ protected: //functions
 	void Setup();
     void ProcessStep();
     U64 FlipWord(U64 word, U32 bits);
+    void ProcessTransaction();
 	
 protected:  //vars
-	std::auto_ptr< JtagAnalyzerSettings > mSettings;
-	std::auto_ptr< JtagAnalyzerResults > mResults;
+	std::auto_ptr<JtagAnalyzerSettings> mSettings;
+	std::auto_ptr<JtagAnalyzerResults> mResults;
 	bool mSimulationInitilized;
 	JtagSimulationDataGenerator mSimulationDataGenerator;
 
@@ -63,6 +82,9 @@ protected:  //vars
     enum JtagState mState;
     U64 mDataIn, mDataOut;
     U32 mBits;
+
+    U32 mLastInstruction, mLastOCDOp;
+    U64 mInstructionStart;
 };
 
 extern "C" ANALYZER_EXPORT const char* __cdecl GetAnalyzerName();
