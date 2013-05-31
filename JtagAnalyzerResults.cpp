@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdio>
+#include <cstring>
 
 #pragma warning(disable: 4996) //warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead.
 
@@ -54,9 +55,34 @@ JtagAnalyzerResults::~JtagAnalyzerResults()
 {
 }
 
+void JtagAnalyzerResults::Disassemble(U64 instr, char *buf)
+{
+    if ((instr & 0xffff0000) == 0xffff0000) {
+        strcpy(buf, "PCReadout?");
+    } else {
+        if ((instr & 0xf000) == 0xe000) { // LDI Rd, K
+            sprintf(buf, "LDI r%d, $%02x", 16+((instr & 0x00f0) >> 4), (instr & 0xf) | ((instr & 0xf00) >> 4));
+        } else if ((instr & 0xfc00) == 0x2c00) { // MOV Rd, Rr
+            sprintf(buf, "MOV r%d, r%d", ((instr & 0x01f0) >> 4), (instr & 0xf) | ((instr & 0x200) >> 5));
+        } else if ((instr & 0xf800) == 0xb800) { // OUT A, Rr
+            sprintf(buf, "OUT $%02x, r%d", (instr & 0xf) | ((instr & 0x600) >> 5), (instr & 0x01f0) >> 4);
+        } else if ((instr & 0xf800) == 0xb000) { // IN Rd, A
+            sprintf(buf, "IN r%d, $%02x", (instr & 0x01f0) >> 4, (instr & 0xf) | ((instr & 0x600) >> 5));
+        } else if (instr == 0x9409) { // IJMP
+            strcpy(buf, "IJMP");
+        } else if (instr == 0x9598) { // BREAK
+            strcpy(buf, "BREAK");
+        } else if (instr == 0x95a8) { // WDR
+            strcpy(buf, "WDR");
+        } else {
+            sprintf(buf, "%04x", instr);
+        }
+    }
+}
+
 void JtagAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel& channel, DisplayBase display_base)
 {
-    char buf[128];
+    char buf[128], disasm[32];
 
 	ClearResultStrings();
 	Frame frame = GetFrame(frame_index);
@@ -89,7 +115,9 @@ void JtagAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel& channel, 
             break;
 
         case AvrExecute:
-            sprintf(buf, "Execute %04x", frame.mData1);
+            Disassemble(frame.mData1, disasm);
+            //sprintf(buf, "Execute %04x", frame.mData1);
+            sprintf(buf, "Ex %s", disasm);
             AddResultString(buf);
             break;
 

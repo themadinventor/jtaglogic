@@ -249,12 +249,12 @@ U32 JtagAnalyzer::GetMinimumSampleRateHz()
 
 const char* JtagAnalyzer::GetAnalyzerName() const
 {
-	return "JTAG";
+	return "AVR JTAG";
 }
 
 const char* GetAnalyzerName()
 {
-	return "JTAG";
+	return "AVR JTAG";
 }
 
 Analyzer* CreateAnalyzer()
