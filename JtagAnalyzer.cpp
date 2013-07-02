@@ -163,8 +163,8 @@ void JtagAnalyzer::ProcessStep()
         Frame result_frame;
         result_frame.mStartingSampleInclusive = mFirstSample;
         result_frame.mEndingSampleInclusive = mTCK->GetSampleNumber();
-        result_frame.mData1 = FlipWord(mDataIn, mBits);
-        result_frame.mData2 = FlipWord(mDataOut, mBits);
+        result_frame.mData1 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataIn, mBits) : mDataIn;
+        result_frame.mData2 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataOut, mBits) : mDataOut;
         result_frame.mFlags = mState;
 
         U64 frame_id = mResults->AddFrame(result_frame);
