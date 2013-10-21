@@ -10,7 +10,7 @@ JtagAnalyzer::JtagAnalyzer()
 	mTMS(NULL),
 	mTDI(NULL),
 	mTDO(NULL),
-    mTRST(NULL)
+        mTRST(NULL)
 {	
 	SetAnalyzerSettings(mSettings.get());
 }
@@ -34,20 +34,20 @@ void JtagAnalyzer::WorkerThread()
 {
 	Setup();
 
-    mState = JtagReset;
-    mFirstSample = mTCK->GetSampleNumber();
-    mDataIn = mDataOut = 0;
-    mBits = 0;
+	mState = JtagReset;
+	mFirstSample = mTCK->GetSampleNumber();
+	mDataIn = mDataOut = 0;
+	mBits = 0;
 
-    if (mTCK->GetBitState() != 0) {
-        mTCK->AdvanceToNextEdge();
-    }
+	if (mTCK->GetBitState() != 0) {
+		mTCK->AdvanceToNextEdge();
+	}
 
 	for ( ; ; ) {
 		mTCK->AdvanceToNextEdge();
 		mCurrentSample = mTCK->GetSampleNumber();
 
-        ProcessStep();
+		ProcessStep();
 
 		mTCK->AdvanceToNextEdge();
 
@@ -64,132 +64,132 @@ void JtagAnalyzer::Setup()
 
 	if (mSettings->mTRSTChannel != UNDEFINED_CHANNEL) {
 		mTRST = GetAnalyzerChannelData(mSettings->mTRSTChannel);
-    } else {
+	} else {
 		mTRST = NULL;
-    }
+	}
 }
 
 void JtagAnalyzer::ProcessStep()
 {
-    mTMS->AdvanceToAbsPosition(mCurrentSample);
-    mTDI->AdvanceToAbsPosition(mCurrentSample);
-    mTDO->AdvanceToAbsPosition(mCurrentSample);
+	mTMS->AdvanceToAbsPosition(mCurrentSample);
+	mTDI->AdvanceToAbsPosition(mCurrentSample);
+	mTDO->AdvanceToAbsPosition(mCurrentSample);
 
 	mResults->AddMarker(mCurrentSample, AnalyzerResults::UpArrow, mSettings->mTCKChannel);
 
-    // Fetch data
-    if (mState == JtagShiftDR || mState == JtagShiftIR) {
-        mDataIn = (mDataIn << 1) | (mTDI->GetBitState() ? 1 : 0);
-        mDataOut = (mDataOut << 1) | (mTDO->GetBitState() ? 1 : 0);
-        mBits++;
+	// Fetch data
+	if (mState == JtagShiftDR || mState == JtagShiftIR) {
+		mDataIn = (mDataIn << 1) | (mTDI->GetBitState() ? 1 : 0);
+		mDataOut = (mDataOut << 1) | (mTDO->GetBitState() ? 1 : 0);
+		mBits++;
 
-	    mResults->AddMarker(mCurrentSample, AnalyzerResults::Dot, mSettings->mTDIChannel);
-	    mResults->AddMarker(mCurrentSample, AnalyzerResults::Dot, mSettings->mTDOChannel);
-    }
+		mResults->AddMarker(mCurrentSample, AnalyzerResults::Dot, mSettings->mTDIChannel);
+		mResults->AddMarker(mCurrentSample, AnalyzerResults::Dot, mSettings->mTDOChannel);
+	}
     
-    // Update JTAG state machine
-    enum JtagState next_state = mState;
-    bool tms = mTMS->GetBitState();
+	// Update JTAG state machine
+	enum JtagState next_state = mState;
+	bool tms = mTMS->GetBitState();
 
-    switch (mState) {
-        case JtagReset:
-            next_state = tms ? JtagReset : JtagIdle;
-            break;
+	switch (mState) {
+	case JtagReset:
+		next_state = tms ? JtagReset : JtagIdle;
+		break;
 
-        case JtagIdle:
-            next_state = tms ? JtagSelectDR : JtagIdle;
-            break;
+	case JtagIdle:
+		next_state = tms ? JtagSelectDR : JtagIdle;
+		break;
 
-        case JtagSelectDR:
-            next_state = tms ? JtagSelectIR : JtagCaptureDR;
-            break;
+	case JtagSelectDR:
+		next_state = tms ? JtagSelectIR : JtagCaptureDR;
+		break;
 
-        case JtagCaptureDR:
-            next_state = tms ? JtagExit1DR : JtagShiftDR;
-            break;
+	case JtagCaptureDR:
+		next_state = tms ? JtagExit1DR : JtagShiftDR;
+		break;
 
-        case JtagShiftDR:
-            next_state = tms ? JtagExit1DR : JtagShiftDR;
-            break;
+	case JtagShiftDR:
+		next_state = tms ? JtagExit1DR : JtagShiftDR;
+		break;
 
-        case JtagExit1DR:
-            next_state = tms ? JtagUpdateDR : JtagPauseDR;
-            break;
+	case JtagExit1DR:
+		next_state = tms ? JtagUpdateDR : JtagPauseDR;
+		break;
 
-        case JtagPauseDR:
-            next_state = tms ? JtagExit2DR : JtagPauseDR;
-            break;
+	case JtagPauseDR:
+		next_state = tms ? JtagExit2DR : JtagPauseDR;
+		break;
 
-        case JtagExit2DR:
-            next_state = tms ? JtagUpdateDR : JtagShiftDR;
-            break;
+	case JtagExit2DR:
+		next_state = tms ? JtagUpdateDR : JtagShiftDR;
+		break;
 
-        case JtagUpdateDR:
-            next_state = tms ? JtagSelectDR : JtagIdle;
-            break;
+	case JtagUpdateDR:
+		next_state = tms ? JtagSelectDR : JtagIdle;
+		break;
 
-        case JtagSelectIR:
-            next_state = tms ? JtagReset : JtagCaptureIR;
-            break;
+	case JtagSelectIR:
+		next_state = tms ? JtagReset : JtagCaptureIR;
+		break;
 
-        case JtagCaptureIR:
-            next_state = tms ? JtagExit1IR : JtagShiftIR;
-            break;
+	case JtagCaptureIR:
+		next_state = tms ? JtagExit1IR : JtagShiftIR;
+		break;
 
-        case JtagShiftIR:
-            next_state = tms ? JtagExit1IR : JtagShiftIR;
-            break;
+	case JtagShiftIR:
+		next_state = tms ? JtagExit1IR : JtagShiftIR;
+		break;
 
-        case JtagExit1IR:
-            next_state = tms ? JtagUpdateIR : JtagPauseIR;
-            break;
+	case JtagExit1IR:
+		next_state = tms ? JtagUpdateIR : JtagPauseIR;
+		break;
 
-        case JtagPauseIR:
-            next_state = tms ? JtagExit2IR : JtagPauseIR;
-            break;
+	case JtagPauseIR:
+		next_state = tms ? JtagExit2IR : JtagPauseIR;
+		break;
 
-        case JtagExit2IR:
-            next_state = tms ? JtagUpdateIR : JtagShiftIR;
-            break;
+	case JtagExit2IR:
+		next_state = tms ? JtagUpdateIR : JtagShiftIR;
+		break;
 
-        case JtagUpdateIR:
-            next_state = tms ? JtagSelectDR : JtagIdle;
-            break;
-    }
+	case JtagUpdateIR:
+		next_state = tms ? JtagSelectDR : JtagIdle;
+		break;
+	}
 
-    if (next_state != mState) {
-        // transition. yay. flush the current transaction.
+	if (next_state != mState) {
+		// transition. yay. flush the current transaction.
 
-        Frame result_frame;
-        result_frame.mStartingSampleInclusive = mFirstSample;
-        result_frame.mEndingSampleInclusive = mTCK->GetSampleNumber();
-        result_frame.mData1 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataIn, mBits) : mDataIn;
-        result_frame.mData2 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataOut, mBits) : mDataOut;
-        result_frame.mFlags = mState;
+		Frame result_frame;
+		result_frame.mStartingSampleInclusive = mFirstSample;
+		result_frame.mEndingSampleInclusive = mTCK->GetSampleNumber();
+		result_frame.mData1 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataIn, mBits) : mDataIn;
+		result_frame.mData2 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataOut, mBits) : mDataOut;
+		result_frame.mFlags = mState;
 
-        U64 frame_id = mResults->AddFrame(result_frame);
-        mResults->CommitResults();
+		U64 frame_id = mResults->AddFrame(result_frame);
+		mResults->CommitResults();
 
-        mFirstSample = mTCK->GetSampleNumber();
-        mState = next_state;
-        mDataIn = mDataOut = 0;
-        mBits = 0;
-    }
+		mFirstSample = mTCK->GetSampleNumber();
+		mState = next_state;
+		mDataIn = mDataOut = 0;
+		mBits = 0;
+	}
 }
 
 // Register contents are shifted LSB first, so this
 // helper flips the words for us.
 U64 JtagAnalyzer::FlipWord(U64 word, U32 bits)
 {
-    U64 result = 0;
+	U64 result = 0;
 
-    for (int idx=0; idx<bits; idx++) {
-        if (word & (1 << idx)) {
-            result |= (1 << (bits-idx-1));
-        }
-    }
+	for (int idx=0; idx<bits; idx++) {
+		if (word & (1 << idx)) {
+			result |= (1 << (bits-idx-1));
+		}
+	}
 
-    return result;
+	return result;
 }
 
 bool JtagAnalyzer::NeedsRerun()

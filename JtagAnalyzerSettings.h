@@ -22,7 +22,7 @@ public:
 	Channel mTDOChannel;
 	Channel mTRSTChannel;
 
-    AnalyzerEnums::ShiftOrder mShiftOrder;
+	AnalyzerEnums::ShiftOrder mShiftOrder;
 
 protected:
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTCKChannelInterface;
@@ -30,7 +30,7 @@ protected:
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTDIChannelInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTDOChannelInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTRSTChannelInterface;
-    std::auto_ptr< AnalyzerSettingInterfaceNumberList > mShiftOrderInterface;
+	std::auto_ptr< AnalyzerSettingInterfaceNumberList > mShiftOrderInterface;
 };
 
 #endif //JTAG_ANALYZER_SETTINGS

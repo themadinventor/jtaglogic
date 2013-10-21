@@ -9,8 +9,8 @@ JtagAnalyzerSettings::JtagAnalyzerSettings()
 	mTMSChannel(UNDEFINED_CHANNEL),
 	mTDIChannel(UNDEFINED_CHANNEL),
 	mTDOChannel(UNDEFINED_CHANNEL),
-    mTRSTChannel(UNDEFINED_CHANNEL),
-    mShiftOrder( AnalyzerEnums::MsbFirst )
+	mTRSTChannel(UNDEFINED_CHANNEL),
+	mShiftOrder( AnalyzerEnums::MsbFirst )
 {
 	mTCKChannelInterface.reset(new AnalyzerSettingInterfaceChannel());
 	mTCKChannelInterface->SetTitleAndTooltip("TCK", "Test Clock");
@@ -33,18 +33,18 @@ JtagAnalyzerSettings::JtagAnalyzerSettings()
 	mTRSTChannelInterface->SetChannel(mTRSTChannel);
 	mTRSTChannelInterface->SetSelectionOfNoneIsAllowed(true );
 
-    mShiftOrderInterface.reset(new AnalyzerSettingInterfaceNumberList() );
-    mShiftOrderInterface->SetTitleAndTooltip( "", "" );
-    mShiftOrderInterface->AddNumber( AnalyzerEnums::MsbFirst, "Most Significant Bit First (Standard)", "" );
-    mShiftOrderInterface->AddNumber( AnalyzerEnums::LsbFirst, "Least Significant Bit First", "" );
-    mShiftOrderInterface->SetNumber( mShiftOrder );
+	mShiftOrderInterface.reset(new AnalyzerSettingInterfaceNumberList() );
+	mShiftOrderInterface->SetTitleAndTooltip( "", "" );
+	mShiftOrderInterface->AddNumber( AnalyzerEnums::MsbFirst, "Most Significant Bit First (Standard)", "" );
+	mShiftOrderInterface->AddNumber( AnalyzerEnums::LsbFirst, "Least Significant Bit First", "" );
+	mShiftOrderInterface->SetNumber( mShiftOrder );
 
 	AddInterface(mTCKChannelInterface.get());
 	AddInterface(mTMSChannelInterface.get());
 	AddInterface(mTDIChannelInterface.get());
 	AddInterface(mTDOChannelInterface.get());
 	AddInterface(mTRSTChannelInterface.get());
-    AddInterface(mShiftOrderInterface.get());
+	AddInterface(mShiftOrderInterface.get());
 
 	AddExportOption(0, "Export as text/csv file");
 	AddExportExtension(0, "text", "txt");
@@ -88,7 +88,7 @@ bool JtagAnalyzerSettings::SetSettingsFromInterfaces()
 	mTDOChannel = mTDOChannelInterface->GetChannel();
 	mTRSTChannel = mTRSTChannelInterface->GetChannel();
 
-    mShiftOrder = (AnalyzerEnums::ShiftOrder) U32( mShiftOrderInterface->GetNumber() );
+	mShiftOrder = (AnalyzerEnums::ShiftOrder) U32( mShiftOrderInterface->GetNumber() );
 
 	ClearChannels();
 	AddChannel(mTCKChannel, "TCK", mTCKChannel != UNDEFINED_CHANNEL);
@@ -109,14 +109,14 @@ void JtagAnalyzerSettings::LoadSettings( const char* settings )
 	text_archive >> &name_string;
 	if (strcmp(name_string, "KongoJtagAnalyzer") != 0) {
 		AnalyzerHelpers::Assert( "KongoJtagAnalyzer: Provided with a settings string that doesn't belong to us;" );
-    }
+	}
 
 	text_archive >> mTCKChannel;
 	text_archive >> mTMSChannel;
 	text_archive >> mTDIChannel;
 	text_archive >> mTDOChannel;
 	text_archive >> mTRSTChannel;
-    text_archive >> *(U32*)&mShiftOrder;
+	text_archive >> *(U32*)&mShiftOrder;
 
 	ClearChannels();
 	AddChannel(mTCKChannel, "TCK", mTCKChannel != UNDEFINED_CHANNEL);
@@ -138,7 +138,7 @@ const char* JtagAnalyzerSettings::SaveSettings()
 	text_archive <<  mTDIChannel;
 	text_archive <<  mTDOChannel;
 	text_archive <<  mTRSTChannel;
-    text_archive << mShiftOrder;
+	text_archive << mShiftOrder;
 
 	return SetReturnString(text_archive.GetString());
 }
@@ -150,5 +150,5 @@ void JtagAnalyzerSettings::UpdateInterfacesFromSettings()
 	mTDIChannelInterface->SetChannel(mTDIChannel);
 	mTDOChannelInterface->SetChannel(mTDOChannel);
 	mTRSTChannelInterface->SetChannel(mTRSTChannel);
-    mShiftOrderInterface->SetNumber( mShiftOrder );
+	mShiftOrderInterface->SetNumber( mShiftOrder );
 }

@@ -6,24 +6,24 @@
 #include "JtagSimulationDataGenerator.h"
 
 enum JtagState {
-    JtagReset,
-    JtagIdle,
-    
-    JtagSelectDR,
-    JtagCaptureDR,
-    JtagShiftDR,
-    JtagExit1DR,
-    JtagPauseDR,
-    JtagExit2DR,
-    JtagUpdateDR,
+	JtagReset,
+	JtagIdle,
 
-    JtagSelectIR,
-    JtagCaptureIR,
-    JtagShiftIR,
-    JtagExit1IR,
-    JtagPauseIR,
-    JtagExit2IR,
-    JtagUpdateIR
+	JtagSelectDR,
+	JtagCaptureDR,
+	JtagShiftDR,
+	JtagExit1DR,
+	JtagPauseDR,
+	JtagExit2DR,
+	JtagUpdateDR,
+
+	JtagSelectIR,
+	JtagCaptureIR,
+	JtagShiftIR,
+	JtagExit1IR,
+	JtagPauseIR,
+	JtagExit2IR,
+	JtagUpdateIR
 };
 
 class JtagAnalyzerSettings;
@@ -43,8 +43,8 @@ public:
 
 protected: //functions
 	void Setup();
-    void ProcessStep();
-    U64 FlipWord(U64 word, U32 bits);
+	void ProcessStep();
+	U64 FlipWord(U64 word, U32 bits);
 	
 protected:  //vars
 	std::auto_ptr< JtagAnalyzerSettings > mSettings;
@@ -60,9 +60,9 @@ protected:  //vars
 
 	U64 mCurrentSample, mFirstSample;
 
-    enum JtagState mState;
-    U64 mDataIn, mDataOut;
-    U32 mBits;
+	enum JtagState mState;
+	U64 mDataIn, mDataOut;
+	U32 mBits;
 };
 
 extern "C" ANALYZER_EXPORT const char* __cdecl GetAnalyzerName();
