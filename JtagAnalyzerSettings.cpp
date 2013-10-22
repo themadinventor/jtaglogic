@@ -1,3 +1,24 @@
+/*
+ * jtaglogic
+ *
+ * Copyright (C) 2013 Fredrik Ahlberg
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
 #include "JtagAnalyzerSettings.h"
 
 #include <AnalyzerHelpers.h>
@@ -9,7 +30,7 @@ JtagAnalyzerSettings::JtagAnalyzerSettings()
 	mTMSChannel(UNDEFINED_CHANNEL),
 	mTDIChannel(UNDEFINED_CHANNEL),
 	mTDOChannel(UNDEFINED_CHANNEL),
-    mTRSTChannel(UNDEFINED_CHANNEL)
+	mTRSTChannel(UNDEFINED_CHANNEL)
 {
 	mTCKChannelInterface.reset(new AnalyzerSettingInterfaceChannel());
 	mTCKChannelInterface->SetTitleAndTooltip("TCK", "Test Clock");
@@ -99,7 +120,7 @@ void JtagAnalyzerSettings::LoadSettings( const char* settings )
 	text_archive >> &name_string;
 	if (strcmp(name_string, "KongoJtagAnalyzer") != 0) {
 		AnalyzerHelpers::Assert( "KongoJtagAnalyzer: Provided with a settings string that doesn't belong to us;" );
-    }
+	}
 
 	text_archive >> mTCKChannel;
 	text_archive >> mTMSChannel;
