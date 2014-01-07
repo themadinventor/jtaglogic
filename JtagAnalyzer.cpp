@@ -205,8 +205,8 @@ U64 JtagAnalyzer::FlipWord(U64 word, U32 bits)
 	U64 result = 0;
 
 	for (int idx=0; idx<bits; idx++) {
-		if (word & (1 << idx)) {
-			result |= (1 << (bits-idx-1));
+		if (word & (1LL << idx)) {
+			result |= (1LL << (bits-idx-1));
 		}
 	}
 
