@@ -1,7 +1,7 @@
 /*
  * jtaglogic
  *
- * Copyright (C) 2013 Fredrik Ahlberg
+ * Copyright (C) 2013-2014 Fredrik Ahlberg
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,6 +24,7 @@
 
 #include <AnalyzerSettings.h>
 #include <AnalyzerTypes.h>
+#include "JtagAnalyzer.h"
 
 class JtagAnalyzerSettings : public AnalyzerSettings
 {
@@ -45,13 +46,16 @@ public:
 
 	AnalyzerEnums::ShiftOrder mShiftOrder;
 
+	JtagInner mInnerProto;
+
 protected:
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTCKChannelInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTMSChannelInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTDIChannelInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTDOChannelInterface;
 	std::auto_ptr< AnalyzerSettingInterfaceChannel >	mTRSTChannelInterface;
-	std::auto_ptr< AnalyzerSettingInterfaceNumberList > mShiftOrderInterface;
+	std::auto_ptr< AnalyzerSettingInterfaceNumberList >	mShiftOrderInterface;
+	std::auto_ptr< AnalyzerSettingInterfaceNumberList >	mInnerProtoInterface;
 };
 
 #endif //JTAG_ANALYZER_SETTINGS

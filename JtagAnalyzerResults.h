@@ -27,6 +27,7 @@
 //#define JTAG_ERROR_FLAG ( 1 << 0 )
 
 class JtagAnalyzer;
+class JtagInnerAnalyzer;
 class JtagAnalyzerSettings;
 
 class JtagAnalyzerResults : public AnalyzerResults
@@ -47,6 +48,7 @@ protected: //functions
 protected:  //vars
 	JtagAnalyzerSettings* mSettings;
 	JtagAnalyzer* mAnalyzer;
+	JtagInnerAnalyzer *mInnerAnalyzer;
 };
 
 #endif //JTAG_ANALYZER_RESULTS

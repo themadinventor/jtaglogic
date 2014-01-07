@@ -1,7 +1,7 @@
 /*
  * jtaglogic
  *
- * Copyright (C) 2013 Fredrik Ahlberg
+ * Copyright (C) 2013-2014 Fredrik Ahlberg
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -25,6 +25,10 @@
 #include "JtagAnalyzerSettings.h"
 #include <iostream>
 #include <sstream>
+
+#include "JtagPlainAnalyzer.h"
+#include "JtagAvrAnalyzer.h"
+#include "JtagArmAnalyzer.h"
 
 #pragma warning(disable: 4996) //warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead.
 
@@ -54,31 +58,37 @@ JtagAnalyzerResults::JtagAnalyzerResults(JtagAnalyzer* analyzer, JtagAnalyzerSet
 	mSettings(settings),
 	mAnalyzer(analyzer)
 {
+	switch (mSettings->mInnerProto) {
+	case InnerPlain:
+		mInnerAnalyzer = new JtagPlainAnalyzer(mSettings);
+		break;
+
+	case InnerAVR:
+		mInnerAnalyzer = new JtagAvrAnalyzer(mSettings);
+		break;
+
+	case InnerARM:
+		mInnerAnalyzer = new JtagArmAnalyzer(mSettings);
+		break;
+	}
 }
 
 JtagAnalyzerResults::~JtagAnalyzerResults()
 {
+	delete mInnerAnalyzer;
 }
 
 void JtagAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel& channel, DisplayBase display_base)
 {
-	char number_str[128];
+	char buf[128] = {0,};
 
 	ClearResultStrings();
 	Frame frame = GetFrame(frame_index);
 
-	if ((frame.mFlags & 0xf) == JtagShiftDR || (frame.mFlags & 0xf) == JtagShiftIR) {
-		if (channel == mSettings->mTDIChannel) {
-			AnalyzerHelpers::GetNumberString(frame.mData1, display_base, 0, number_str, 128);
-			AddResultString(number_str);
-		} else if (channel == mSettings->mTDOChannel) {
-			AnalyzerHelpers::GetNumberString(frame.mData2, display_base, 0, number_str, 128);
-			AddResultString(number_str);
-		}
-	}
+	mInnerAnalyzer->generateBubbleText(frame, channel, display_base, buf);
 
-	if (channel == mSettings->mTMSChannel) {
-		AddResultString(JtagStateStr[frame.mFlags & 0x0f]);
+	if (buf[0]) {
+		AddResultString(buf);
 	}
 }
 

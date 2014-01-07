@@ -3,7 +3,8 @@ LDFLAGS		=-shared -lAnalyzer64 -L./sdk/lib/
 
 all: libJtagAnalyzer.so
 
-libJtagAnalyzer.so: JtagAnalyzer.o JtagAnalyzerResults.o JtagAnalyzerSettings.o JtagSimulationDataGenerator.o
+libJtagAnalyzer.so: JtagAnalyzer.o JtagAnalyzerResults.o JtagAnalyzerSettings.o JtagSimulationDataGenerator.o \
+			JtagPlainAnalyzer.o JtagAvrAnalyzer.o JtagArmAnalyzer.o
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 clean:

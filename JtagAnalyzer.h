@@ -1,7 +1,7 @@
 /*
  * jtaglogic
  *
- * Copyright (C) 2013 Fredrik Ahlberg
+ * Copyright (C) 2013-2014 Fredrik Ahlberg
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -47,6 +47,22 @@ enum JtagState {
 	JtagUpdateIR
 };
 
+enum JtagInner {
+	InnerPlain,
+	InnerAVR,
+	InnerARM
+};
+
+class JtagInnerAnalyzer
+{
+public:
+	virtual ~JtagInnerAnalyzer();
+	virtual void process(enum JtagState state, U64 in, U64 out, U32 bits,
+			U64 begin, U64 end, JtagAnalyzerResults *results) = 0;
+	virtual void generateBubbleText(Frame &frame, Channel &channel,
+			DisplayBase display_base, char *str) = 0;
+};
+
 class JtagAnalyzerSettings;
 class JtagAnalyzer : public Analyzer2
 {
@@ -62,10 +78,11 @@ public:
 	virtual const char* GetAnalyzerName() const;
 	virtual bool NeedsRerun();
 
+	static U64 FlipWord(U64 word, U32 bits);
+
 protected: //functions
 	void Setup();
 	void ProcessStep();
-	U64 FlipWord(U64 word, U32 bits);
 	
 protected:  //vars
 	std::auto_ptr< JtagAnalyzerSettings > mSettings;
@@ -80,6 +97,8 @@ protected:  //vars
 	AnalyzerChannelData* mTRST;
 
 	U64 mCurrentSample, mFirstSample;
+
+	JtagInnerAnalyzer *mInnerAnalyzer;
 
 	enum JtagState mState;
 	U64 mDataIn, mDataOut;

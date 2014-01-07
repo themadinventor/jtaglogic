@@ -31,7 +31,8 @@ JtagAnalyzerSettings::JtagAnalyzerSettings()
 	mTDIChannel(UNDEFINED_CHANNEL),
 	mTDOChannel(UNDEFINED_CHANNEL),
 	mTRSTChannel(UNDEFINED_CHANNEL),
-	mShiftOrder( AnalyzerEnums::MsbFirst )
+	mShiftOrder(AnalyzerEnums::MsbFirst),
+	mInnerProto(InnerPlain)
 {
 	mTCKChannelInterface.reset(new AnalyzerSettingInterfaceChannel());
 	mTCKChannelInterface->SetTitleAndTooltip("TCK", "Test Clock");
@@ -54,6 +55,13 @@ JtagAnalyzerSettings::JtagAnalyzerSettings()
 	mTRSTChannelInterface->SetChannel(mTRSTChannel);
 	mTRSTChannelInterface->SetSelectionOfNoneIsAllowed(true );
 
+	mInnerProtoInterface.reset(new AnalyzerSettingInterfaceNumberList());
+	mInnerProtoInterface->SetTitleAndTooltip("Inner protocol", "");
+	mInnerProtoInterface->AddNumber(InnerPlain, "None", "");
+	mInnerProtoInterface->AddNumber(InnerAVR, "AVR ICE", "");
+	mInnerProtoInterface->AddNumber(InnerARM, "ARM CoreSight", "");
+	mInnerProtoInterface->SetNumber(mInnerProto);
+
 	mShiftOrderInterface.reset(new AnalyzerSettingInterfaceNumberList() );
 	mShiftOrderInterface->SetTitleAndTooltip( "", "" );
 	mShiftOrderInterface->AddNumber( AnalyzerEnums::MsbFirst, "Most Significant Bit First (Standard)", "" );
@@ -65,6 +73,7 @@ JtagAnalyzerSettings::JtagAnalyzerSettings()
 	AddInterface(mTDIChannelInterface.get());
 	AddInterface(mTDOChannelInterface.get());
 	AddInterface(mTRSTChannelInterface.get());
+	AddInterface(mInnerProtoInterface.get());
 	AddInterface(mShiftOrderInterface.get());
 
 	AddExportOption(0, "Export as text/csv file");
@@ -109,6 +118,8 @@ bool JtagAnalyzerSettings::SetSettingsFromInterfaces()
 	mTDOChannel = mTDOChannelInterface->GetChannel();
 	mTRSTChannel = mTRSTChannelInterface->GetChannel();
 
+	mInnerProto = (JtagInner) U32( mInnerProtoInterface->GetNumber() );
+
 	mShiftOrder = (AnalyzerEnums::ShiftOrder) U32( mShiftOrderInterface->GetNumber() );
 
 	ClearChannels();
@@ -137,6 +148,7 @@ void JtagAnalyzerSettings::LoadSettings( const char* settings )
 	text_archive >> mTDIChannel;
 	text_archive >> mTDOChannel;
 	text_archive >> mTRSTChannel;
+	text_archive >> *(U32*)&mInnerProto;
 	text_archive >> *(U32*)&mShiftOrder;
 
 	ClearChannels();
@@ -159,6 +171,7 @@ const char* JtagAnalyzerSettings::SaveSettings()
 	text_archive <<  mTDIChannel;
 	text_archive <<  mTDOChannel;
 	text_archive <<  mTRSTChannel;
+	text_archive << mInnerProto;
 	text_archive << mShiftOrder;
 
 	return SetReturnString(text_archive.GetString());
@@ -171,5 +184,6 @@ void JtagAnalyzerSettings::UpdateInterfacesFromSettings()
 	mTDIChannelInterface->SetChannel(mTDIChannel);
 	mTDOChannelInterface->SetChannel(mTDOChannel);
 	mTRSTChannelInterface->SetChannel(mTRSTChannel);
-	mShiftOrderInterface->SetNumber( mShiftOrder );
+	mInnerProtoInterface->SetNumber(mInnerProto);
+	mShiftOrderInterface->SetNumber(mShiftOrder);
 }

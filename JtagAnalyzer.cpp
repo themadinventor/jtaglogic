@@ -1,7 +1,7 @@
 /*
  * jtaglogic
  *
- * Copyright (C) 2013 Fredrik Ahlberg
+ * Copyright (C) 2013-2014 Fredrik Ahlberg
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,7 +22,15 @@
 #include "JtagAnalyzer.h"
 #include "JtagAnalyzerSettings.h"
 #include <AnalyzerChannelData.h>
+
+#include "JtagPlainAnalyzer.h"
+#include "JtagAvrAnalyzer.h"
+#include "JtagArmAnalyzer.h"
  
+JtagInnerAnalyzer::~JtagInnerAnalyzer()
+{
+}
+
 JtagAnalyzer::JtagAnalyzer()
 :	Analyzer2(),
 	mSettings(new JtagAnalyzerSettings()),
@@ -74,6 +82,8 @@ void JtagAnalyzer::WorkerThread()
 
 		CheckIfThreadShouldExit();
 	}
+
+	delete mInnerAnalyzer;
 }
 
 void JtagAnalyzer::Setup()
@@ -87,6 +97,20 @@ void JtagAnalyzer::Setup()
 		mTRST = GetAnalyzerChannelData(mSettings->mTRSTChannel);
 	} else {
 		mTRST = NULL;
+	}
+
+	switch (mSettings->mInnerProto) {
+	case InnerPlain:
+		mInnerAnalyzer = new JtagPlainAnalyzer(mSettings.get());
+		break;
+
+	case InnerAVR:
+		mInnerAnalyzer = new JtagAvrAnalyzer(mSettings.get());
+		break;
+
+	case InnerARM:
+		mInnerAnalyzer = new JtagArmAnalyzer(mSettings.get());
+		break;
 	}
 }
 
@@ -181,15 +205,8 @@ void JtagAnalyzer::ProcessStep()
 	if (next_state != mState) {
 		// transition. yay. flush the current transaction.
 
-		Frame result_frame;
-		result_frame.mStartingSampleInclusive = mFirstSample;
-		result_frame.mEndingSampleInclusive = mTCK->GetSampleNumber();
-		result_frame.mData1 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataIn, mBits) : mDataIn;
-		result_frame.mData2 = mSettings->mShiftOrder == AnalyzerEnums::MsbFirst ? FlipWord(mDataOut, mBits) : mDataOut;
-		result_frame.mFlags = mState;
-
-		U64 frame_id = mResults->AddFrame(result_frame);
-		mResults->CommitResults();
+		mInnerAnalyzer->process(mState, mDataIn, mDataOut, mBits,
+				mFirstSample, mTCK->GetSampleNumber(), mResults.get());
 
 		mFirstSample = mTCK->GetSampleNumber();
 		mState = next_state;
@@ -205,8 +222,8 @@ U64 JtagAnalyzer::FlipWord(U64 word, U32 bits)
 	U64 result = 0;
 
 	for (int idx=0; idx<bits; idx++) {
-		if (word & (1LL << idx)) {
-			result |= (1LL << (bits-idx-1));
+		if (word & (1ULL << idx)) {
+			result |= (1ULL << (bits-idx-1));
 		}
 	}
 
